@@ -37,7 +37,6 @@ export class ClientsService {
         take: limit,
         include: {
           user: { select: { loginId: true, name: true } },
-          layout: true,
           sequence: true,
         },
         orderBy: { createdAt: 'desc' },
@@ -61,7 +60,6 @@ export class ClientsService {
       where: { id },
       include: {
         user: { select: { loginId: true, name: true } },
-        layout: true,
         sequence: true,
       },
     });
@@ -77,14 +75,13 @@ export class ClientsService {
     return this.prisma.client.findUnique({
       where: { userId },
       include: {
-        layout: true,
         sequence: true,
       },
     });
   }
 
   async create(createClientDto: CreateClientDto): Promise<ClientWithUser> {
-    const { loginId, password, name, description, location, layoutId, sequenceId } =
+    const { loginId, password, name, description, location, sequenceId } =
       createClientDto;
 
     // Check if loginId already exists
@@ -116,12 +113,10 @@ export class ClientsService {
           description,
           location,
           userId: user.id,
-          layoutId,
           sequenceId,
         },
         include: {
           user: { select: { loginId: true, name: true } },
-          layout: true,
           sequence: true,
         },
       });
@@ -135,7 +130,7 @@ export class ClientsService {
     updateClientDto: UpdateClientDto,
   ): Promise<ClientWithUser> {
     const client = await this.findOne(id);
-    const { password, name, description, location, layoutId, sequenceId } =
+    const { password, name, description, location, sequenceId } =
       updateClientDto;
 
     // Update user password if provided
@@ -158,22 +153,17 @@ export class ClientsService {
         name,
         description,
         location,
-        layoutId,
         sequenceId,
       },
       include: {
         user: { select: { loginId: true, name: true } },
-        layout: true,
         sequence: true,
       },
     });
 
-    // Notify client if sequence or layout changed
+    // Notify client if sequence changed
     if (sequenceId !== undefined && sequenceId !== client.sequenceId) {
       this.clientGateway.sendSequenceUpdate(id, updatedClient.sequence);
-    }
-    if (layoutId !== undefined && layoutId !== client.layoutId) {
-      this.clientGateway.sendConfigUpdate(id, updatedClient);
     }
 
     return updatedClient;

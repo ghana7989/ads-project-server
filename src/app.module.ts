@@ -8,7 +8,6 @@ import { UsersModule } from './modules/users/users.module';
 import { ClientsModule } from './modules/clients/clients.module';
 import { VideosModule } from './modules/videos/videos.module';
 import { SequencesModule } from './modules/sequences/sequences.module';
-import { LayoutsModule } from './modules/layouts/layouts.module';
 import { ClientApiModule } from './modules/client-api/client-api.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
@@ -28,7 +27,6 @@ import { AppService } from './app.service';
     ClientsModule,
     VideosModule,
     SequencesModule,
-    LayoutsModule,
     ClientApiModule,
     GatewayModule,
   ],

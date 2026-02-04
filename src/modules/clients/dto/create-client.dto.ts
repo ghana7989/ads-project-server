@@ -31,10 +31,5 @@ export class CreateClientDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  layoutId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
   sequenceId?: string;
 }

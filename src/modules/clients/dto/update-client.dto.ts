@@ -26,10 +26,5 @@ export class UpdateClientDto {
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()
-  layoutId?: string;
-
-  @ApiPropertyOptional()
-  @IsOptional()
-  @IsString()
   sequenceId?: string;
 }

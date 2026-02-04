@@ -34,8 +34,6 @@ model Client {
   user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Configuration
-  layoutId   String?
-  layout     Layout?   @relation(fields: [layoutId], references: [id])
   sequenceId String?
   sequence   Sequence? @relation(fields: [sequenceId], references: [id])
 
@@ -76,18 +74,6 @@ model Sequence {
   clients Client[]
 }
 
-model Layout {
-  id        String     @id @default(cuid())
-  name      String
-  type      LayoutType @default(FULLSCREEN)
-  config    String // JSON string: Layout-specific configuration
-  createdAt DateTime   @default(now())
-  updatedAt DateTime   @updatedAt
-
-  // Relations
-  clients Client[]
-}
-
 model ActivityLog {
   id        String   @id @default(cuid())
   clientId  String
@@ -115,11 +101,4 @@ enum VideoSource {
   VIDYARD
   KALTURA
   FILE
-}
-
-enum LayoutType {
-  FULLSCREEN
-  SPLIT_HORIZONTAL
-  SPLIT_VERTICAL
-  PIP
 }

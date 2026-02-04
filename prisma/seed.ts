@@ -1,5 +1,5 @@
 import 'dotenv/config';
-import { PrismaClient, Role, LayoutType, VideoSource } from '@prisma/client';
+import { PrismaClient, Role, VideoSource } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
@@ -31,19 +31,6 @@ async function main(): Promise<void> {
     },
   });
   console.log('Created admin user:', admin.email);
-
-  // Create default fullscreen layout
-  const layout = await prisma.layout.upsert({
-    where: { id: 'default-fullscreen' },
-    update: {},
-    create: {
-      id: 'default-fullscreen',
-      name: 'Default Fullscreen',
-      type: LayoutType.FULLSCREEN,
-      config: JSON.stringify({ backgroundColor: '#000000' }),
-    },
-  });
-  console.log('Created default layout:', layout.name);
 
   // Seed YouTube videos with thumbnails
   const videos = [
@@ -122,7 +109,6 @@ async function main(): Promise<void> {
       description: 'Main lobby display screen',
       location: 'Building A - Lobby',
       userId: clientUser.id,
-      layoutId: layout.id,
     },
   });
   console.log('Created sample client:', client.name);
