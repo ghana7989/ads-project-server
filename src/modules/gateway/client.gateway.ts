@@ -44,7 +44,9 @@ export class ClientGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   async handleConnection(socket: AuthenticatedSocket): Promise<void> {
     try {
-      const token = socket.handshake.auth.token || socket.handshake.headers.authorization?.replace('Bearer ', '');
+      const token =
+        socket.handshake.auth.token ||
+        socket.handshake.headers.authorization?.replace('Bearer ', '');
 
       if (!token) {
         this.logger.warn('Connection attempt without token');
@@ -62,21 +64,35 @@ export class ClientGateway implements OnGatewayConnection, OnGatewayDisconnect {
       if (payload.role === 'CLIENT') {
         const client = await this.prisma.client.findUnique({
           where: { userId: payload.sub },
+          include: {
+            user: { select: { loginId: true, name: true } },
+          },
         });
         if (client) {
           socket.clientId = client.id;
           this.connectedClients.set(client.id, socket.id);
-          await this.prisma.client.update({
+          const updatedClient = await this.prisma.client.update({
             where: { id: client.id },
             data: { isOnline: true, lastSeen: new Date() },
+            include: {
+              user: { select: { loginId: true, name: true } },
+            },
           });
           socket.join(`client:${client.id}`);
           this.logger.log(`Client ${client.id} connected`);
+
+          // Notify admin dashboard that client is now online
+          this.server.emit('admin:client-online', {
+            clientId: client.id,
+            client: updatedClient,
+          });
         }
       }
 
       socket.join(`user:${payload.sub}`);
-      this.logger.log(`Socket ${socket.id} authenticated for user ${payload.sub}`);
+      this.logger.log(
+        `Socket ${socket.id} authenticated for user ${payload.sub}`,
+      );
     } catch (error) {
       this.logger.error('Authentication failed', error);
       socket.disconnect();
@@ -86,11 +102,20 @@ export class ClientGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async handleDisconnect(socket: AuthenticatedSocket): Promise<void> {
     if (socket.clientId) {
       this.connectedClients.delete(socket.clientId);
-      await this.prisma.client.update({
+      const updatedClient = await this.prisma.client.update({
         where: { id: socket.clientId },
         data: { isOnline: false, lastSeen: new Date() },
+        include: {
+          user: { select: { loginId: true, name: true } },
+        },
       });
       this.logger.log(`Client ${socket.clientId} disconnected`);
+
+      // Notify admin dashboard that client is now offline
+      this.server.emit('admin:client-offline', {
+        clientId: socket.clientId,
+        client: updatedClient,
+      });
     }
     this.logger.log(`Socket ${socket.id} disconnected`);
   }
@@ -111,7 +136,8 @@ export class ClientGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('client:playback-status')
   handlePlaybackStatus(
     @ConnectedSocket() socket: AuthenticatedSocket,
-    @MessageBody() data: { videoId: string; position: number; duration: number },
+    @MessageBody()
+    data: { videoId: string; position: number; duration: number },
   ): void {
     this.server.emit('admin:playback-status', {
       clientId: socket.clientId,
