@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { Client, Sequence, Layout } from '@prisma/client';
+import { Client, Sequence } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ClientsService } from '../clients/clients.service';
 import { HeartbeatDto, LogActivityDto } from './dto/heartbeat.dto';
@@ -17,7 +17,6 @@ interface RequestUser {
 
 export interface ClientConfig {
   client: Client;
-  layout: Layout | null;
   sequence: Sequence | null;
 }
 
@@ -32,7 +31,6 @@ export class ClientApiService {
     const client = await this.prisma.client.findUnique({
       where: { userId: user.id },
       include: {
-        layout: true,
         sequence: true,
       },
     });
@@ -43,7 +41,6 @@ export class ClientApiService {
 
     return {
       client,
-      layout: client.layout,
       sequence: client.sequence,
     };
   }
