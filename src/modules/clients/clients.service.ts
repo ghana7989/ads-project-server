@@ -178,10 +178,7 @@ export class ClientsService {
     });
   }
 
-  async updateOnlineStatus(
-    id: string,
-    isOnline: boolean,
-  ): Promise<Client> {
+  async updateOnlineStatus(id: string, isOnline: boolean): Promise<Client> {
     return this.prisma.client.update({
       where: { id },
       data: {
