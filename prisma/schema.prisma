@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String?  @unique // Only for admins
+  loginId   String?  @unique // Only for clients
+  password  String
+  role      Role     @default(CLIENT)
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  client Client?
+}
+
+model Client {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  location    String?
+  isOnline    Boolean   @default(false)
+  lastSeen    DateTime?
+  userId      String    @unique
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Configuration
+  layoutId   String?
+  layout     Layout?   @relation(fields: [layoutId], references: [id])
+  sequenceId String?
+  sequence   Sequence? @relation(fields: [sequenceId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  activityLogs ActivityLog[]
+}
+
+model Video {
+  id        String      @id @default(cuid())
+  url       String
+  title     String
+  duration  Int? // seconds (optional, auto-fetched if possible)
+  thumbnail String?
+  source    VideoSource @default(YOUTUBE)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+}
+
+model Sequence {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  videoIds    String // JSON array: ["id1", "id2", "id3"]
+  isActive    Boolean  @default(true)
+
+  // Scheduling
+  startDate   DateTime?
+  endDate     DateTime?
+  activeHours String? // JSON string: { start: "09:00", end: "18:00" }
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  clients Client[]
+}
+
+model Layout {
+  id        String     @id @default(cuid())
+  name      String
+  type      LayoutType @default(FULLSCREEN)
+  config    String // JSON string: Layout-specific configuration
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  // Relations
+  clients Client[]
+}
+
+model ActivityLog {
+  id        String   @id @default(cuid())
+  clientId  String
+  client    Client   @relation(fields: [clientId], references: [id], onDelete: Cascade)
+  action    String
+  details   String? // JSON string
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  ADMIN
+  CLIENT
+}
+
+enum VideoSource {
+  YOUTUBE
+  VIMEO
+  FACEBOOK
+  SOUNDCLOUD
+  STREAMABLE
+  WISTIA
+  TWITCH
+  DAILYMOTION
+  MIXCLOUD
+  VIDYARD
+  KALTURA
+  FILE
+}
+
+enum LayoutType {
+  FULLSCREEN
+  SPLIT_HORIZONTAL
+  SPLIT_VERTICAL
+  PIP
+}
