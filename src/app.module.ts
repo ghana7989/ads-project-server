@@ -13,6 +13,8 @@ import { ClientApiModule } from './modules/client-api/client-api.module';
 import { GatewayModule } from './modules/gateway/gateway.module';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { RolesGuard } from './common/guards/roles.guard';
+import { AppController } from './app.controller';
+import { AppService } from './app.service';
 
 @Module({
   imports: [
@@ -30,7 +32,9 @@ import { RolesGuard } from './common/guards/roles.guard';
     ClientApiModule,
     GatewayModule,
   ],
+  controllers: [AppController],
   providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,
