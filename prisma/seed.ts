@@ -1,7 +1,19 @@
+import 'dotenv/config';
 import { PrismaClient, Role, LayoutType, VideoSource } from '@prisma/client';
+import { PrismaPg } from '@prisma/adapter-pg';
+import { Pool } from 'pg';
 import * as bcrypt from 'bcrypt';
 
-const prisma = new PrismaClient();
+// Create PostgreSQL connection pool with SSL
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+
+const adapter = new PrismaPg(pool);
+const prisma = new PrismaClient({ adapter });
 
 async function main(): Promise<void> {
   console.log('Seeding database...');
@@ -33,32 +45,42 @@ async function main(): Promise<void> {
   });
   console.log('Created default layout:', layout.name);
 
-  // Seed YouTube videos
+  // Seed YouTube videos with thumbnails
   const videos = [
     {
-      id: 'video-1',
+      id: 'Sample Dummy Video',
       url: 'https://www.youtube.com/watch?v=EngW7tLk6R8',
-      title: 'Video 1',
+      title: 'Sample Dummy Video',
+      thumbnail: 'https://img.youtube.com/vi/EngW7tLk6R8/maxresdefault.jpg',
+      duration: 30,
     },
     {
-      id: 'video-2',
+      id: 'Windows Horse Running Video',
       url: 'https://www.youtube.com/watch?v=a3ICNMQW7Ok',
-      title: 'Video 2',
+      title: 'Windows Horse Running Video',
+      thumbnail: 'https://img.youtube.com/vi/a3ICNMQW7Ok/maxresdefault.jpg',
+      duration: 15,
     },
     {
-      id: 'video-3',
+      id: 'Bokeh Blue',
       url: 'https://www.youtube.com/watch?v=K4TOrB7at0Y',
-      title: 'Video 3',
+      title: 'Bokeh Blue Background',
+      thumbnail: 'https://img.youtube.com/vi/K4TOrB7at0Y/maxresdefault.jpg',
+      duration: 60,
     },
     {
-      id: 'video-4',
+      id: 'Intro Video Sample',
       url: 'https://www.youtube.com/watch?v=OHz0xIR8uwI',
-      title: 'Video 4',
+      title: 'Intro Video Sample',
+      thumbnail: 'https://img.youtube.com/vi/OHz0xIR8uwI/maxresdefault.jpg',
+      duration: 20,
     },
     {
-      id: 'video-5',
+      id: 'Sony Alpha 4k Video',
       url: 'https://www.youtube.com/watch?v=O5O3yK8DJCc',
-      title: 'Video 5',
+      title: 'Sony Alpha 4K Demo',
+      thumbnail: 'https://img.youtube.com/vi/O5O3yK8DJCc/maxresdefault.jpg',
+      duration: 45,
     },
   ];
 
@@ -70,11 +92,13 @@ async function main(): Promise<void> {
         id: video.id,
         url: video.url,
         title: video.title,
+        thumbnail: video.thumbnail,
+        duration: video.duration,
         source: VideoSource.YOUTUBE,
       },
     });
   }
-  console.log(`Created ${videos.length} YouTube videos`);
+  console.log(`Created ${videos.length} YouTube videos with thumbnails`);
 
   // Create a sample client user
   const clientPassword = await bcrypt.hash('client123', 10);
@@ -113,4 +137,5 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    await pool.end();
   });
